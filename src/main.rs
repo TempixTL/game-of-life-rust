@@ -1,5 +1,6 @@
 use std::env;
-use game_of_life::*;
+use game_of_life::cfg::Config;
+use game_of_life::cfg;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -7,11 +8,11 @@ fn main() {
 
     match config {
         Ok(config) => println!("{:?}", config.steps),
-        Err(ConfigException::InvalidArgumentCount) =>
+        Err(cfg::Exception::InvalidArgumentCount) =>
             eprintln!("Invalid number of arguments."),
-        Err(ConfigException::InvalidStepNumber) =>
+        Err(cfg::Exception::InvalidStepNumber) =>
             eprintln!("Invalid step number."),
-        Err(ConfigException::FileAccess) =>
+        Err(cfg::Exception::FileAccess) =>
             eprintln!("Unable to open file."),
     }
 }
