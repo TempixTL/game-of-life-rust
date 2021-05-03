@@ -8,11 +8,13 @@ fn main() {
 
     match config {
         Ok(config) => println!("{:?}", config.steps),
-        Err(cfg::Exception::InvalidArgumentCount) =>
-            eprintln!("Invalid number of arguments."),
-        Err(cfg::Exception::InvalidStepNumber) =>
+        Err(cfg::ConfigError::ArgumentCountError { found, expected }) =>
+            eprintln!("Invalid number of arguments. Found {}, expected {}", found, expected),
+        Err(cfg::ConfigError::StepCountError { found: Some(steps) }) =>
+            eprintln!("Invalid step number. Found {}", steps),
+        Err(cfg::ConfigError::StepCountError { found: None }) =>
             eprintln!("Invalid step number."),
-        Err(cfg::Exception::FileAccess) =>
-            eprintln!("Unable to open file."),
+        Err(cfg::ConfigError::FileAccessError { file_name }) =>
+            eprintln!("Unable to open file '{}'.", file_name),
     }
 }
