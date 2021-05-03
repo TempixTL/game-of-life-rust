@@ -1,8 +1,4 @@
 pub mod cfg {
-    use std::fmt;
-    use std::fmt::Formatter;
-    use std::error;
-    use std::error::Error;
     use std::fs::File;
 
     pub struct Config {
