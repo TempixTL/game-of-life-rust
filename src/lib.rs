@@ -35,7 +35,6 @@ pub mod engine {
     use std::fmt;
     use std::fmt::Formatter;
     use std::ops;
-    use std::convert::TryFrom;
     use crate::cfg::Config;
 
     pub fn run(config: Config) {
@@ -57,6 +56,8 @@ pub mod engine {
     /// A Board which stores a grid of [`Cell`] in row-major order.
     struct Board {
         grid: Vec<Vec<Cell>>,
+        width: usize,
+        height: usize,
     }
 
     impl Board {
@@ -73,7 +74,7 @@ pub mod engine {
             ).collect();
 
             if grid_size == grid.len() && grid.iter().all(|grid_line| grid_size == grid_line.len()) {
-                Some(Board { grid })
+                Some(Board { grid, width: grid_size, height: grid_size })
             } else {
                 None
             }
@@ -81,19 +82,15 @@ pub mod engine {
 
         pub fn neighbors(&self, x: usize, y: usize) -> i32 {
             let mut n = 0;
-            for dx in -1..=1i32 {
-                for dy in -1..=1i32 {
-                    if dx == 0 && dy == 0 { continue }
 
-                    let nx = i32::try_from(x).unwrap() + dx;
-                    let ny = i32::try_from(y).unwrap() + dy;
-                    match (usize::try_from(nx), usize::try_from(ny)) {
-                        (Ok(nx), Ok(ny))
-                            if ny < self.grid.len() &&
-                               nx < self[ny].len() &&
-                               self[ny][nx] == Cell::Alive =>
-                            n += 1,
-                        _ => (),
+            for nx in vec![x.checked_sub(1), Some(x), x.checked_add(1)] {
+                for ny in vec![y.checked_sub(1), Some(y), y.checked_add(1)] {
+                    match (nx, ny) {
+                        (Some(nx), Some(ny)) if nx == x && ny == y => (),
+                        (Some(nx), Some(ny))
+                            if nx < self.width && ny < self.height &&
+                            self[nx][ny] == Cell::Alive => n += 1,
+                        (_, _) => (),
                     }
                 }
             }
