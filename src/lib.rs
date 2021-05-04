@@ -1,8 +1,8 @@
 pub mod cfg {
-    use std::fs::File;
+    use std::fs;
 
     pub struct Config {
-        pub file: File,
+        pub starting_board: String,
         pub steps: i32,
     }
 
@@ -12,11 +12,11 @@ pub mod cfg {
                 return Err(ConfigError::ArgumentCountError { found: args.len(), expected: 3 })
             }
 
-            let file = File::open(args[1].clone());
+            let starting_board = fs::read_to_string(args[1].clone()).map(|str| str.trim().to_string());
             let steps = args[2].parse::<i32>();
 
-            match (file, steps) {
-                (Ok(file), Ok(steps)) if steps >= 0 => Ok(Config { file, steps }),
+            match (starting_board, steps) {
+                (Ok(starting_board), Ok(steps)) if steps >= 0 => Ok(Config { starting_board, steps }),
                 (Err(_), _) => Err(ConfigError::FileAccessError { file_name: args[1].clone() }),
                 (_, Ok(steps)) => Err(ConfigError::StepCountError { found: Some(steps) }),
                 (_, Err(_)) => Err(ConfigError::StepCountError {found: None }),
