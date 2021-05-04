@@ -34,6 +34,8 @@ pub mod cfg {
 pub mod engine {
     use std::fmt;
     use std::fmt::Formatter;
+    use std::ops;
+    use std::convert::TryFrom;
     use crate::cfg::Config;
 
     pub fn run(config: Config) {
@@ -42,10 +44,11 @@ pub mod engine {
             Some(board) => {
                 println!("Starting board:\n{}", board);
             },
-            None => eprintln!("Unable to parse board."),
+            None => eprintln!("Unable tostring parse board."),
         }
     }
 
+    #[derive(PartialEq)]
     enum Cell {
         Alive,
         Dead,
@@ -74,6 +77,36 @@ pub mod engine {
             } else {
                 None
             }
+        }
+
+        pub fn neighbors(&self, x: usize, y: usize) -> i32 {
+            let mut n = 0;
+            for dx in -1..=1i32 {
+                for dy in -1..=1i32 {
+                    if dx == 0 && dy == 0 { continue }
+
+                    let nx = i32::try_from(x).unwrap() + dx;
+                    let ny = i32::try_from(y).unwrap() + dy;
+                    match (usize::try_from(nx), usize::try_from(ny)) {
+                        (Ok(nx), Ok(ny))
+                            if ny < self.grid.len() &&
+                               nx < self[ny].len() &&
+                               self[ny][nx] == Cell::Alive =>
+                            n += 1,
+                        _ => (),
+                    }
+                }
+            }
+
+            n
+        }
+    }
+
+    impl ops::Index<usize> for Board {
+        type Output = Vec<Cell>;
+
+        fn index(&self, idx: usize) -> &Self::Output {
+            &self.grid[idx]
         }
     }
 
