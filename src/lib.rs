@@ -41,13 +41,22 @@ pub mod engine {
         let Config { starting_board, steps } = config;
         match Board::new(starting_board) {
             Some(board) => {
-                println!("Starting board:\n{}", board);
+                let mut current_board = board;
+                for iteration in 0..=steps {
+                    if iteration == 0 {
+                        println!("Initial board:");
+                    } else {
+                        println!("Board after step {}:", iteration)
+                    }
+                    println!("{}", current_board);
+                    current_board = current_board.step();
+                }
             },
             None => eprintln!("Unable tostring parse board."),
         }
     }
 
-    #[derive(PartialEq)]
+    #[derive(Copy, Clone, PartialEq)]
     enum Cell {
         Alive,
         Dead,
@@ -97,6 +106,31 @@ pub mod engine {
 
             n
         }
+
+        pub fn step(&self) -> Board {
+            let mut next_board = self.clone();
+            for x in 0..self.width {
+                for y in 0..self.height {
+                    match (self[x][y], self.neighbors(x, y)) {
+                        (_, 3)          => next_board[x][y] = Cell::Alive,
+                        (Cell::Alive, 2) => next_board[x][y] = Cell::Alive,
+                        (_, _)          => next_board[x][y] = Cell::Dead,
+                    }
+                }
+            }
+
+            next_board
+        }
+    }
+
+    impl Clone for Board {
+        fn clone(&self) -> Board {
+            Board {
+                grid: self.grid.iter().map(|grid_line| grid_line.clone()).collect(),
+                width: self.width,
+                height: self.height,
+            }
+        }
     }
 
     impl ops::Index<usize> for Board {
@@ -104,6 +138,12 @@ pub mod engine {
 
         fn index(&self, idx: usize) -> &Self::Output {
             &self.grid[idx]
+        }
+    }
+
+    impl ops::IndexMut<usize> for Board {
+        fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+            &mut self.grid[idx]
         }
     }
 
