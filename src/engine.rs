@@ -22,6 +22,12 @@ pub fn run(config: Config) {
     }
 }
 
+#[derive(Copy, Clone, PartialEq)]
+enum Cell {
+    Alive,
+    Dead,
+}
+
 /// A Board which stores a grid of [`Cell`] in row-major order.
 struct Board {
     grid: Vec<Vec<Cell>>,
@@ -120,10 +126,4 @@ impl fmt::Display for Board {
         
         Ok(())
     }
-}
-
-#[derive(Copy, Clone, PartialEq)]
-enum Cell {
-    Alive,
-    Dead,
 }
