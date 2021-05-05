@@ -3,6 +3,12 @@ use std::fmt::Formatter;
 use std::ops;
 use crate::cfg::Config;
 
+/// Runs the Game of Life according to the given [Config]. Prints results to
+/// `stdout`.
+/// 
+/// # Arguments
+/// * `config` - The configuration specifying how to run the Game of Life
+/// simulation.
 pub fn run(config: Config) {
     let Config { starting_board, steps } = config;
     match Board::new(starting_board) {
@@ -127,4 +133,8 @@ impl fmt::Display for Board {
         
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod test {
 }
