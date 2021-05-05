@@ -71,7 +71,7 @@ impl Board {
                     (Some(nx), Some(ny)) if nx == x && ny == y => (),
                     (Some(nx), Some(ny))
                         if nx < self.width && ny < self.height &&
-                        self[nx][ny] == Cell::Alive => n += 1,
+                        self[ny][nx] == Cell::Alive => n += 1,
                     (_, _) => (),
                 }
             }
@@ -173,5 +173,28 @@ mod test {
             },
             None => panic!(),
         }
+    }
+
+    fn create_test_board() -> Board {
+        let board_str = "\
+4
+1 . 1 .
+. . . .
+1 1 1 1
+. 1 . 1".to_string();
+        Board::new(board_str).unwrap()
+    }
+
+    #[test]
+    fn board_neighbors_should_correctly_count_neighbors() {
+        let board = create_test_board();
+        println!("{}", board);
+
+        assert_eq!(board.neighbors(0, 0), 0);
+        assert_eq!(board.neighbors(1, 1), 5);
+        assert_eq!(board.neighbors(2, 2), 4);
+        assert_eq!(board.neighbors(1, 2), 3);
+        assert_eq!(board.neighbors(3, 3), 2);
+        assert_eq!(board.neighbors(3, 0), 1);
     }
 }
