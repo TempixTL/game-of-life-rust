@@ -74,7 +74,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_should_argument_count_error() {
+    fn should_fail_on_argument_count() {
         let args = [];
         match Config::new(&args) {
             Err(ConfigError::ArgumentCountError { found: 0, expected: _ }) => (),
@@ -83,7 +83,7 @@ mod test {
     }
 
     #[test]
-    fn test_should_file_access_error() {
+    fn config_new_should_fail_on_file_access() {
         let args = ["exe".to_string(), "/inaccessible_file".to_string(), "0".to_string()];
         match Config::new(&args) {
             Err(ConfigError::FileAccessError{ file_name: _ }) => (),
@@ -92,7 +92,7 @@ mod test {
     }
 
     #[test]
-    fn test_should_step_count_error() {
+    fn config_new_should_fail_on_step_count() {
         let args = ["exe".to_string(), "input/game-of-life-in1.txt".to_string(), "-1".to_string()];
         match Config::new(&args) {
             Err(ConfigError::StepCountError { found: _ }) => (),
@@ -101,7 +101,13 @@ mod test {
     }
 
     #[test]
-    fn test_should_return_config() -> Result<(), ConfigError> {
+    fn config_new_should_succeed() {
+        let args = ["exe".to_string(), "input/game-of-life-in1.txt".to_string(), "3".to_string()];
+        assert!(Config::new(&args).is_ok());
+    }
+
+    #[test]
+    fn config_new_should_return_correct_config() -> Result<(), ConfigError> {
         let args = ["exe".to_string(), "input/game-of-life-in1.txt".to_string(), "3".to_string()];
         let config = Config::new(&args)?;
 
