@@ -18,7 +18,7 @@ pub fn run(config: Config) {
                 current_board = current_board.step();
             }
         },
-        None => eprintln!("Unable tostring parse board."),
+        None => eprintln!("Unable to parse board."),
     }
 }
 
