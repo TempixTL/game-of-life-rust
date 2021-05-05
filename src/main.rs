@@ -32,7 +32,7 @@ fn print_help(prog_name: &str) {
 Simulates Conway's Game of Life.
 
 Syntax: {} INIT_BOARD_FILE STEP_NUMBER
-Options:
+Parameters:
 INIT_BOARD_FILE - Path to the initial Game of Life board.
 STEP_NUMBER - Number of steps to iterate. Should be a positive number.",
     prog_name);
