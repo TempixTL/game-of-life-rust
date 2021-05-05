@@ -137,4 +137,41 @@ impl fmt::Display for Board {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
+    #[test]
+    fn board_new_should_fail_on_empty_string() {
+        assert!(Board::new("".to_string()).is_none());
+    }
+
+    #[test]
+    fn board_new_should_fail_on_malformed_string() {
+        assert!(Board::new("10\n1 . .".to_string()).is_none());
+    }
+
+    #[test]
+    fn board_new_should_succeed() {
+        // Minimum necessary for a board's string representation (0 size)
+        let board_str = "0".to_string();
+        assert!(Board::new(board_str).is_some());
+    }
+
+    #[test]
+    fn board_new_should_return_correct_board() {
+        let board_str = "\
+2
+1 .
+. 1".to_string();
+        match Board::new(board_str) {
+            Some(board) => {
+                assert_eq!(board[0][0], Cell::Alive);
+                assert_eq!(board[1][0], Cell::Dead);
+                assert_eq!(board[0][1], Cell::Dead);
+                assert_eq!(board[1][1], Cell::Alive);
+                assert_eq!(board.width, 2);
+                assert_eq!(board.height, 2);
+            },
+            None => panic!(),
+        }
+    }
 }
