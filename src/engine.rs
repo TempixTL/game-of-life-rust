@@ -85,9 +85,9 @@ impl Board {
         for x in 0..self.width {
             for y in 0..self.height {
                 match (self[x][y], self.neighbors(x, y)) {
-                    (_, 3)          => next_board[x][y] = Cell::Alive,
-                    (Cell::Alive, 2) => next_board[x][y] = Cell::Alive,
-                    (_, _)          => next_board[x][y] = Cell::Dead,
+                    (_, 3)          => next_board[y][x] = Cell::Alive,
+                    (Cell::Alive, 2) => next_board[y][x] = Cell::Alive,
+                    (_, _)          => next_board[y][x] = Cell::Dead,
                 }
             }
         }
@@ -196,5 +196,26 @@ mod test {
         assert_eq!(board.neighbors(1, 2), 3);
         assert_eq!(board.neighbors(3, 3), 2);
         assert_eq!(board.neighbors(3, 0), 1);
+    }
+
+    #[test]
+    fn board_next_should_correctly_compute_next_board() {
+        let board = create_test_board();
+        let next_board_str = "\
+4
+. . . .
+1 . . 1
+1 1 . .
+1 1 . 1".to_string();
+        let next_board = Board::new(next_board_str).unwrap();
+        let next_board_calc = board.step();
+
+        assert_eq!(next_board.width, next_board_calc.width);
+        assert_eq!(next_board.height, next_board_calc.height);
+        for x in 0..next_board.width {
+            for y in 0..next_board.height {
+                assert_eq!(next_board[y][x], next_board_calc[y][x]);
+            }
+        }
     }
 }
