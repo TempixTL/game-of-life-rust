@@ -37,7 +37,7 @@ enum Cell {
 /// A Board which stores a grid of [`Cell`] in row-major order.
 #[derive(Debug)]
 struct Board {
-    grid: Vec<Vec<Cell>>,
+    grid: Vec<Cell>,
     width: usize,
     height: usize,
 }
@@ -48,30 +48,30 @@ impl Board {
 
         let grid_size_str = str_iter.next()?;
         let grid_size = grid_size_str.parse::<usize>().ok()?;
-        let grid: Vec<Vec<Cell>> = str_iter.map(|grid_line|
+        let grid: Vec<Cell> = str_iter.flat_map(|grid_line|
             grid_line.split(" ").map(|grid_char| match grid_char {
                 "1" => Cell::Alive,
                 _   => Cell::Dead,
-            }).collect()
+            })
         ).collect();
 
-        if grid_size == grid.len() && grid.iter().all(|grid_line| grid_size == grid_line.len()) {
+        if grid_size*grid_size == grid.len() {
             Some(Board { grid, width: grid_size, height: grid_size })
         } else {
             None
         }
     }
 
-    pub fn neighbors(&self, x: usize, y: usize) -> i32 {
+    pub fn neighbors(&self, r: usize, c: usize) -> i32 {
         let mut n = 0;
 
-        for nx in vec![x.checked_sub(1), Some(x), x.checked_add(1)] {
-            for ny in vec![y.checked_sub(1), Some(y), y.checked_add(1)] {
-                match (nx, ny) {
-                    (Some(nx), Some(ny)) if nx == x && ny == y => (),
-                    (Some(nx), Some(ny))
-                        if nx < self.width && ny < self.height &&
-                        self[ny][nx] == Cell::Alive => n += 1,
+        for nr in vec![r.checked_sub(1), Some(r), r.checked_add(1)] {
+            for nc in vec![c.checked_sub(1), Some(c), c.checked_add(1)] {
+                match (nr, nc) {
+                    (Some(nr), Some(nc))
+                        if !(nr == r && nc == c) &&
+                        nc < self.width && nr < self.height &&
+                        self[(nr, nc)] == Cell::Alive => n += 1,
                     (_, _) => (),
                 }
             }
@@ -82,12 +82,12 @@ impl Board {
 
     pub fn step(&self) -> Board {
         let mut next_board = self.clone();
-        for x in 0..self.width {
-            for y in 0..self.height {
-                match (self[x][y], self.neighbors(x, y)) {
-                    (_, 3)          => next_board[y][x] = Cell::Alive,
-                    (Cell::Alive, 2) => next_board[y][x] = Cell::Alive,
-                    (_, _)          => next_board[y][x] = Cell::Dead,
+        for c in 0..self.width {
+            for r in 0..self.height {
+                match (self[(r, c)], self.neighbors(r, c)) {
+                    (_, 3)           => next_board[(r, c)] = Cell::Alive,
+                    (Cell::Alive, 2) => next_board[(r, c)] = Cell::Alive,
+                    (_, _)           => next_board[(r, c)] = Cell::Dead,
                 }
             }
         }
@@ -99,36 +99,41 @@ impl Board {
 impl Clone for Board {
     fn clone(&self) -> Board {
         Board {
-            grid: self.grid.iter().map(|grid_line| grid_line.clone()).collect(),
+            grid: self.grid.clone(),
             width: self.width,
             height: self.height,
         }
     }
 }
 
-impl ops::Index<usize> for Board {
-    type Output = Vec<Cell>;
+impl ops::Index<(usize, usize)> for Board {
+    type Output = Cell;
 
-    fn index(&self, idx: usize) -> &Self::Output {
-        &self.grid[idx]
+    fn index(&self, (r, c): (usize, usize)) -> &Self::Output {
+        &self.grid[r*self.width + c]
     }
 }
 
-impl ops::IndexMut<usize> for Board {
-    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
-        &mut self.grid[idx]
+impl ops::IndexMut<(usize, usize)> for Board {
+    fn index_mut(&mut self, (r, c): (usize, usize)) -> &mut Self::Output {
+        &mut self.grid[r*self.width + c]
     }
 }
 
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        for grid_line in self.grid.iter() {
-            let grid_line_str = grid_line.iter().map(|cell| match cell {
-                Cell::Alive => "1".to_string(),
-                Cell::Dead  => ".".to_string(),
-            }).collect::<Vec<String>>().join(" ");
-            
-            writeln!(f, "{}", grid_line_str)?
+        for (i, cell) in self.grid.iter().enumerate() {
+            let grid_char = match cell {
+                Cell::Alive => "1",
+                Cell::Dead  => ".",
+            };
+
+            write!(f, "{}", grid_char)?;
+            if (i+1) % self.width == 0 {
+                writeln!(f)?;
+            } else {
+                write!(f, " ")?;
+            }
         }
         
         Ok(())
@@ -164,10 +169,10 @@ mod test {
 . 1".to_string();
         match Board::new(board_str) {
             Some(board) => {
-                assert_eq!(board[0][0], Cell::Alive);
-                assert_eq!(board[1][0], Cell::Dead);
-                assert_eq!(board[0][1], Cell::Dead);
-                assert_eq!(board[1][1], Cell::Alive);
+                assert_eq!(board[(0,0)], Cell::Alive);
+                assert_eq!(board[(1,0)], Cell::Dead);
+                assert_eq!(board[(0,1)], Cell::Dead);
+                assert_eq!(board[(1,1)], Cell::Alive);
                 assert_eq!(board.width, 2);
                 assert_eq!(board.height, 2);
             },
@@ -188,14 +193,13 @@ mod test {
     #[test]
     fn board_neighbors_should_correctly_count_neighbors() {
         let board = create_test_board();
-        println!("{}", board);
 
         assert_eq!(board.neighbors(0, 0), 0);
         assert_eq!(board.neighbors(1, 1), 5);
         assert_eq!(board.neighbors(2, 2), 4);
-        assert_eq!(board.neighbors(1, 2), 3);
+        assert_eq!(board.neighbors(2, 1), 3);
         assert_eq!(board.neighbors(3, 3), 2);
-        assert_eq!(board.neighbors(3, 0), 1);
+        assert_eq!(board.neighbors(0, 3), 1);
     }
 
     #[test]
@@ -205,7 +209,7 @@ mod test {
 4
 . . . .
 1 . . 1
-1 1 . .
+1 1 . 1
 1 1 . 1".to_string();
         let next_board = Board::new(next_board_str).unwrap();
         let next_board_calc = board.step();
@@ -214,7 +218,7 @@ mod test {
         assert_eq!(next_board.height, next_board_calc.height);
         for x in 0..next_board.width {
             for y in 0..next_board.height {
-                assert_eq!(next_board[y][x], next_board_calc[y][x]);
+                assert_eq!(next_board[(y,x)], next_board_calc[(y,x)], "Index ({}, {}) of computed board didn't match.", y, x);
             }
         }
     }
