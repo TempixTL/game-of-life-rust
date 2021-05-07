@@ -1,5 +1,5 @@
 use std::env;
-use game_of_life::cfg::{Config, ConfigError};
+use game_of_life::cfg::Config;
 use game_of_life::engine;
 
 fn main() {
@@ -8,26 +8,7 @@ fn main() {
 
     match config {
         Ok(config) => engine::run(config),
-        Err(ConfigError::ArgumentCountError { found, expected }) => {
-            print_help(
-                &format!("Invalid number of arguments. Found {}, expected {}", found, expected),
-                &args[0]);
-        },
-        Err(ConfigError::StepCountError { found: Some(steps) }) => {
-            print_help(
-                &format!("Invalid step number. Found {}", steps),
-                &args[0]);
-        },
-        Err(ConfigError::StepCountError { found: None }) => {
-            print_help(
-                &format!("Invalid step number."),
-                &args[0]);
-        },
-        Err(ConfigError::FileAccessError { file_name }) => {
-            print_help(
-                &format!("Unable to open file '{}'.", file_name),
-                &args[0]);
-        },
+        Err(err_str) => print_help(&err_str, &args[0]),
     }
 }
 
