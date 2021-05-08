@@ -2,10 +2,35 @@ use std::io;
 use std::io::{Error, ErrorKind};
 use crate::engine::{Cell, Board};
 
+/// A simple Parser trait for converting a String representation into a
+/// `[Board]`.
 pub(crate) trait Parser {
   fn parse_board(&self, str: &str) -> Result<Board, io::Error>;
 }
 
+/// A basic parser named after one of my professors, Dr. Massingill. We were
+/// assigned a homework to implement Game of Life in C for our Low-Level class,
+/// and this is the format of file that we used.
+/// 
+/// The first line, `n` is a single int that defines the size of the board.
+/// What follows is `n` lines of `n` symbols representing live and dead cells,
+/// where each cell is separated by a single space. A live cell is represented
+/// with the character `1`, while dead cells are represented with the character
+/// `.`.
+/// 
+/// # Example
+/// 
+/// From `input/game-of-life-in1.txt`:
+/// 
+/// ```
+/// 6
+/// . . . . . .
+/// 1 1 1 . . .
+/// . . . . . .
+/// . . . . 1 .
+/// . . . . 1 .
+/// . . . . 1 .
+/// ```
 #[derive(Debug)]
 pub(crate) struct MassingillParser {}
 
