@@ -130,23 +130,6 @@ mod test {
     use crate::parser::MassingillParser;
 
     #[test]
-    fn board_new_should_fail_on_empty_string() {
-        assert!(Board::parse("", &MassingillParser {}).is_err());
-    }
-
-    #[test]
-    fn board_new_should_fail_on_malformed_string() {
-        assert!(Board::parse("10\n1 . .", &MassingillParser {}).is_err());
-    }
-
-    #[test]
-    fn board_new_should_succeed() {
-        // Minimum necessary for a board's string representation (0 size)
-        let board_str = "0";
-        assert!(Board::parse(board_str, &MassingillParser {}).is_ok());
-    }
-
-    #[test]
     fn board_new_should_return_correct_board() {
         let board_str = "\
 2

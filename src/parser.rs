@@ -31,3 +31,29 @@ impl Parser for MassingillParser {
     }
   }
 }
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  fn default_mass_parser() -> MassingillParser {
+    MassingillParser {}
+  }
+
+  #[test]
+  fn mass_parser_should_fail_on_empty_string() {
+    assert!(default_mass_parser().parse_board("").is_err());
+  }
+
+  #[test]
+  fn mass_parser_should_fail_on_malformed_string() {
+    assert!(default_mass_parser().parse_board("10\n1 . .").is_err());
+  }
+
+  #[test]
+  fn mass_parser_should_succeed() {
+    assert!(default_mass_parser().parse_board("0").is_ok());
+    assert!(default_mass_parser().parse_board("1\n.").is_ok());
+    assert!(default_mass_parser().parse_board("2\n1 .\n. 1").is_ok());
+  }
+}
