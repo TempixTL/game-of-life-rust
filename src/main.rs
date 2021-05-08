@@ -7,7 +7,9 @@ fn main() {
     let config = Config::new(&args);
 
     match config {
-        Ok(config) => engine::run(config),
+        Ok(config) => if let Err(error) = engine::run(config) {
+            eprintln!("Error while running: {}", error);
+        },
         Err(err_str) => print_help(&err_str, &args[0]),
     }
 }

@@ -1,12 +1,14 @@
 use std::fs;
+use crate::parser::{Parser, MassingillParser};
 
 /// A struct representing the startup configuration for the applicaiton.
-#[derive(Debug)]
 pub struct Config {
     /// A string representation of the initial Game of Life board.
-    pub starting_board: String,
+    pub(crate) starting_board: String,
     /// The number of iterations the `starting_board` should go through.
-    pub steps: i32,
+    pub(crate) steps: i32,
+    /// The parser to use when reading the `starting_board`.
+    pub(crate) parser: Box<dyn Parser>,
 }
 
 impl Config {
@@ -45,7 +47,7 @@ impl Config {
         let steps = args[2].parse::<i32>();
 
         match (starting_board, steps) {
-            (Ok(starting_board), Ok(steps)) if steps >= 0 => Ok(Config { starting_board, steps }),
+            (Ok(starting_board), Ok(steps)) if steps >= 0 => Ok(Config { starting_board, steps, parser: Box::new(MassingillParser {}) }),
             (Err(_), _) => Err(format!("Unable to open file '{}'.", args[1])),
             (_, Ok(steps)) => Err(format!("Invalid step number. Found {}", steps)),
             (_, Err(_)) => Err("Invalid step number.".to_string()),

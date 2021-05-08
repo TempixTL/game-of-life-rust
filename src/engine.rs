@@ -1,7 +1,9 @@
 use std::fmt;
 use std::fmt::Formatter;
+use std::io::Error;
 use std::ops;
 use crate::cfg::Config;
+use crate::parser::Parser;
 
 /// Runs the Game of Life according to the given [Config]. Prints results to
 /// `stdout`.
@@ -9,57 +11,39 @@ use crate::cfg::Config;
 /// # Arguments
 /// * `config` - The configuration specifying how to run the Game of Life
 /// simulation.
-pub fn run(config: Config) {
-    let Config { starting_board, steps } = config;
-    match Board::new(starting_board) {
-        Some(board) => {
-            let mut current_board = board;
-            for iteration in 0..=steps {
-                if iteration == 0 {
-                    println!("Initial board:");
-                } else {
-                    println!("Board after step {}:", iteration)
-                }
-                println!("{}", current_board);
-                current_board = current_board.step();
-            }
-        },
-        None => eprintln!("Unable to parse board."),
+pub fn run(config: Config) -> Result<(), Error> {
+    let Config { starting_board, steps, parser } = config;
+    let mut current_board = Board::parse(&starting_board, &*parser)?;
+    for iteration in 0..=steps {
+        if iteration == 0 {
+            println!("Initial board:");
+        } else {
+            println!("Board after step {}:", iteration)
+        }
+        println!("{}", current_board);
+        current_board = current_board.step();
     }
+
+    Ok(())
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-enum Cell {
+pub(crate) enum Cell {
     Alive,
     Dead,
 }
 
 /// A Board which stores a grid of [`Cell`] in row-major order.
 #[derive(Debug)]
-struct Board {
-    grid: Vec<Cell>,
-    width: usize,
-    height: usize,
+pub(crate) struct Board {
+    pub grid: Vec<Cell>,
+    pub width: usize,
+    pub height: usize,
 }
 
 impl Board {
-    pub fn new(str: String) -> Option<Board> {
-        let mut str_iter = str.lines();
-
-        let grid_size_str = str_iter.next()?;
-        let grid_size = grid_size_str.parse::<usize>().ok()?;
-        let grid: Vec<Cell> = str_iter.flat_map(|grid_line|
-            grid_line.split(" ").map(|grid_char| match grid_char {
-                "1" => Cell::Alive,
-                _   => Cell::Dead,
-            })
-        ).collect();
-
-        if grid_size*grid_size == grid.len() {
-            Some(Board { grid, width: grid_size, height: grid_size })
-        } else {
-            None
-        }
+    pub fn parse(str: &str, parser: &dyn Parser) -> Result<Board, Error> {
+        parser.parse_board(str)
     }
 
     pub fn neighbors(&self, r: usize, c: usize) -> i32 {
