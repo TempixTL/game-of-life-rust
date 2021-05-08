@@ -127,22 +127,23 @@ impl fmt::Display for Board {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::parser::MassingillParser;
 
     #[test]
     fn board_new_should_fail_on_empty_string() {
-        assert!(Board::new("".to_string()).is_none());
+        assert!(Board::parse("", &MassingillParser {}).is_err());
     }
 
     #[test]
     fn board_new_should_fail_on_malformed_string() {
-        assert!(Board::new("10\n1 . .".to_string()).is_none());
+        assert!(Board::parse("10\n1 . .", &MassingillParser {}).is_err());
     }
 
     #[test]
     fn board_new_should_succeed() {
         // Minimum necessary for a board's string representation (0 size)
-        let board_str = "0".to_string();
-        assert!(Board::new(board_str).is_some());
+        let board_str = "0";
+        assert!(Board::parse(board_str, &MassingillParser {}).is_ok());
     }
 
     #[test]
@@ -150,9 +151,9 @@ mod test {
         let board_str = "\
 2
 1 .
-. 1".to_string();
-        match Board::new(board_str) {
-            Some(board) => {
+. 1";
+        match Board::parse(board_str, &MassingillParser {}) {
+            Ok(board) => {
                 assert_eq!(board[(0,0)], Cell::Alive);
                 assert_eq!(board[(1,0)], Cell::Dead);
                 assert_eq!(board[(0,1)], Cell::Dead);
@@ -160,7 +161,7 @@ mod test {
                 assert_eq!(board.width, 2);
                 assert_eq!(board.height, 2);
             },
-            None => panic!(),
+            Err(_) => panic!(),
         }
     }
 
@@ -170,8 +171,8 @@ mod test {
 1 . 1 .
 . . . .
 1 1 1 1
-. 1 . 1".to_string();
-        Board::new(board_str).unwrap()
+. 1 . 1";
+        Board::parse(board_str, &MassingillParser {}).unwrap()
     }
 
     #[test]
@@ -194,8 +195,8 @@ mod test {
 . . . .
 1 . . 1
 1 1 . 1
-1 1 . 1".to_string();
-        let next_board = Board::new(next_board_str).unwrap();
+1 1 . 1";
+        let next_board = Board::parse(next_board_str, &MassingillParser {}).unwrap();
         let next_board_calc = board.step();
 
         assert_eq!(next_board.width, next_board_calc.width);

@@ -34,7 +34,6 @@ impl Config {
     /// ];
     /// 
     /// let config = Config::new(&args)?;
-    /// assert_eq!(config.steps, 3);
     /// # Ok(())
     /// # }
     /// ```
