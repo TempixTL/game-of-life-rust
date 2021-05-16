@@ -22,7 +22,7 @@ pub(crate) trait Parser {
 /// 
 /// From `input/game-of-life-in1.txt`:
 /// 
-/// ```
+/// `
 /// 6
 /// . . . . . .
 /// 1 1 1 . . .
@@ -30,7 +30,7 @@ pub(crate) trait Parser {
 /// . . . . 1 .
 /// . . . . 1 .
 /// . . . . 1 .
-/// ```
+/// `
 #[derive(Debug)]
 pub(crate) struct MassingillParser {}
 
@@ -80,5 +80,12 @@ mod test {
     assert!(default_mass_parser().parse_board("0").is_ok());
     assert!(default_mass_parser().parse_board("1\n.").is_ok());
     assert!(default_mass_parser().parse_board("2\n1 .\n. 1").is_ok());
+    let board_str = "\
+4
+1 . 1 .
+. . . .
+1 1 1 1
+. 1 . 1";
+    assert!(default_mass_parser().parse_board(board_str).is_ok());
   }
 }
