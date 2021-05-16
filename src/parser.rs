@@ -5,6 +5,7 @@ use crate::engine::{Cell, Board};
 /// A simple Parser trait for converting a String representation into a
 /// `[Board]`.
 pub(crate) trait Parser {
+  const MALFORMED_INPUT_ERR: io::Error = Error::new(ErrorKind::InvalidData, "Malformed input file.");
   fn parse_board(&self, str: &str) -> Result<Board, io::Error>;
 }
 
@@ -52,7 +53,7 @@ impl Parser for MassingillParser {
     if grid_size*grid_size == grid.len() {
       Ok(Board { grid, width: grid_size, height: grid_size })
     } else {
-      Err(Error::new(ErrorKind::InvalidData, "Malformed input file."))
+      Err(Self::MALFORMED_INPUT_ERR)
     }
   }
 }
