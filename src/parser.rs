@@ -1,5 +1,6 @@
 use std::io;
 use std::io::{Error, ErrorKind};
+use regex::Regex;
 use crate::engine::{Cell, Board};
 
 /// A simple Parser trait for converting a String representation into a
@@ -57,6 +58,76 @@ impl Parser for MassingillParser {
   }
 }
 
+pub(crate) struct RLEParser {}
+
+impl Parser for RLEParser {
+  fn parse_board(&self, str: &str) -> Result<Board, io::Error> {
+    let invalid_data_err = |err| Error::new(ErrorKind::InvalidData, err);
+
+    // validate input string
+    let re = Regex
+      ::new(r"^(?:#.*\n)*x *= *(\d+), *y *= *(\d+).*\n((?:(?:\s*\d*(?:b|o)\s*)*(?:\$|!.*))*)")
+      .unwrap();
+    let cap = re.captures(str).ok_or(invalid_data_err("Invalid file format."))?;
+
+    let cols = cap.get(1)
+      .and_then(|x| x.as_str().parse::<usize>().ok())
+      .ok_or(invalid_data_err("Invalid number of columns."))?;
+    let rows = cap.get(2)
+      .and_then(|x| x.as_str().parse::<usize>().ok())
+      .ok_or(invalid_data_err("Invalid number of rows."))?;
+    let board_str = cap.get(3).map(|mtch| mtch.as_str())
+      .ok_or(invalid_data_err("Invalid board representation."))?
+      .trim();
+
+    let board_rows_str = board_str.split_terminator(|c| c == '$' || c == '!').collect::<Vec<&str>>();
+    if board_rows_str.len() != rows {
+      return Err(invalid_data_err(&format!(
+        "Number of rows in header does not match. Found {}, header stated {}",
+        board_rows_str.len(),
+        rows
+      )));
+    }
+
+    // parse grid string
+    let mut grid = Vec::new();
+    let cell_re = Regex::new(r"(\d*)(b|o)").unwrap();
+    for row_str in board_rows_str {
+      let mut col = 0;
+      for cap in cell_re.captures_iter(row_str) {
+        let cnt = if cap[1].is_empty() { 1 } else {
+          cap[1].parse::<usize>().map_err(|e| Error::new(ErrorKind::InvalidData, e))?
+        };
+        let cell = match &cap[2] {
+          "o" => Ok(Cell::Alive),
+          "b" => Ok(Cell::Dead),
+          _   => Err(invalid_data_err("Invalid cell representation.")),
+        }?;
+
+        col += cnt;
+        for _ in 0..cnt {
+          grid.push(cell);
+        }
+      }
+
+      while col < cols {
+        grid.push(Cell::Dead);
+        col += 1;
+      }
+    }
+
+    if grid.len() == rows*cols {
+      Ok(Board { width: cols, height: rows, grid })
+    } else {
+      Err(invalid_data_err(&format!(
+        "Board size (x*y) in header does not match. Found {}, header stated {}",
+        grid.len(),
+        rows*cols
+      )))
+    }
+  }
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
@@ -87,5 +158,22 @@ mod test {
 1 1 1 1
 . 1 . 1";
     assert!(default_mass_parser().parse_board(board_str).is_ok());
+  }
+
+  fn default_rle_parser() -> RLEParser {
+    RLEParser {}
+  }
+
+  #[test]
+  fn rle_parser_should_succeed() -> Result<(), io::Error> {
+    let board_str = "\
+#N Gosper glider gun
+#C This was the first gun discovered.
+#C As its name suggests, it was discovered by Bill Gosper.
+x = 36, y = 9, rule = B3/S23
+24bo$22bobo$12b2o6b2o12b2o$11bo3bo4b2o12b2o$2o8bo5bo3b2o$2o8bo3bob2o4b
+obo$10bo5bo7bo$11bo3bo$12b2o!";
+    default_rle_parser().parse_board(board_str)?;
+    Ok(())
   }
 }
