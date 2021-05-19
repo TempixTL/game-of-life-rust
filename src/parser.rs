@@ -80,7 +80,9 @@ impl Parser for RLEParser {
       .ok_or(invalid_data_err("Invalid board representation."))?
       .trim();
 
-    let board_rows_str = board_str.split_terminator(|c| c == '$' || c == '!').collect::<Vec<&str>>();
+    let board_rows_str = board_str
+      .split_terminator(|c| c == '$' || c == '!')
+      .collect::<Vec<&str>>();
     if board_rows_str.len() != rows {
       return Err(invalid_data_err(&format!(
         "Number of rows in header does not match. Found {}, header stated {}",
@@ -96,7 +98,9 @@ impl Parser for RLEParser {
       let mut col = 0;
       for cap in cell_re.captures_iter(row_str) {
         let cnt = if cap[1].is_empty() { 1 } else {
-          cap[1].parse::<usize>().map_err(|e| Error::new(ErrorKind::InvalidData, e))?
+          cap[1]
+            .parse::<usize>()
+            .map_err(|e| Error::new(ErrorKind::InvalidData, e))?
         };
         let cell = match &cap[2] {
           "o" => Ok(Cell::Alive),
